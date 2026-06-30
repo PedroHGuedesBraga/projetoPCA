@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+
+  backend:
+    build:
+      context: ./backend-pca
+    container_name: backend-pca
+    env_file:
+      - ./backend-pca/.env
+    restart: unless-stopped
+    expose:
+      - "3000"
+    volumes:
+    - ./backend-pca/uploads/pdfs:/app/uploads
+
+  frontend:
+    build:
+      context: ./frontend-pca
+    container_name: frontend-pca
+    env_file:
+      - ./frontend-pca/.env.local
+    depends_on:
+      - backend
+    restart: unless-stopped
+    expose:
+      - "3001"
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx-pca
+
+    ports:
+      - "80:80"
+
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+
+    depends_on:
+      - frontend
+      - backend
+
+    restart: unless-stopped
