@@ -6,90 +6,79 @@ import { Column } from "primereact/column";
 import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
 import { InputText } from "primereact/inputtext";
-import { Password } from "primereact/password";
-import { Dropdown } from "primereact/dropdown";
-import { Tag } from "primereact/tag";
 import { Toast } from "primereact/toast";
 import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
 import { ProgressSpinner } from "primereact/progressspinner";
+import { Calendar } from "primereact/calendar";
 import { useRouteGuard } from "@/hooks/useRouteGuard";
-import { usuarioService, Usuario } from "@/services/usuario/usuarioService";
-import { secretariaService } from "@/services/secretaria/secretariaService";
-import { Secretaria } from "@/types/secretaria";
+import aprovadoService, { Aprovado } from "@/services/aprovado/aprovadoService";
 
 export default function AdminPage() {
   const guardStatus = useRouteGuard("admin");
-
   const toastRef = useRef<Toast>(null);
-  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-  const [secretarias, setSecretarias] = useState<Secretaria[]>([]);
+
+  const [aprovados, setAprovados] = useState<Aprovado[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-
-  const [nome, setNome] = useState("");
-  const [email, setEmail] = useState("");
-  const [cpf, setCpf] = useState("");
-  const [senha, setSenha] = useState("");
-  const [cargo, setCargo] = useState("usuario");
-  const [secretariaId, setSecretariaId] = useState("");
+  const [nomeEmpresa, setNomeEmpresa] = useState("");
+  const [dataContrato, setDataContrato] = useState<Date | null>(null);
+  const [arquivo, setArquivo] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const showToast = (severity: "success" | "error" | "warn" | "info", summary: string, detail?: string) => {
     toastRef.current?.show({ severity, summary, detail, life: 3000 });
   };
 
-  const handleCpfChange = (value: string) => {
-    const nums = value.replace(/\D/g, "").slice(0, 11);
-    const formatted = nums
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-    setCpf(formatted);
-  };
-
-  const fetchUsuarios = async () => {
+  const fetchAprovados = async () => {
     try {
-      const data = await usuarioService.getAll();
-      setUsuarios(data);
+      const data = await aprovadoService.getAll();
+      setAprovados(data);
     } catch {
-      showToast("error", "Erro", "Não foi possível carregar os usuários.");
+      showToast("error", "Erro", "Não foi possível carregar os documentos.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUsuarios();
-    secretariaService.getAll().then(setSecretarias);
+    fetchAprovados();
   }, []);
 
   const resetForm = () => {
-    setNome(""); setEmail(""); setCpf(""); setSenha("");
-    setCargo("usuario"); setSecretariaId("");
+    setNomeEmpresa("");
+    setDataContrato(null);
+    setArquivo(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleSave = async () => {
-    if (!nome.trim() || !email.trim() || !cpf || !senha || !secretariaId) {
-      showToast("warn", "Campos obrigatórios", "Preencha todos os campos.");
+  const handleUpload = async () => {
+    if (!nomeEmpresa.trim() || !dataContrato || !arquivo) {
+      showToast("warn", "Campos obrigatórios", "Preencha todos os campos e selecione um PDF.");
       return;
     }
     try {
-      await usuarioService.create({
-        nome, email,
-        cpf: cpf.replace(/\D/g, ""),
-        senha, cargo, secretariaId,
-      });
-      showToast("success", "Usuário criado", `${nome} foi adicionado ao sistema.`);
+      const dataStr = dataContrato.toISOString().split("T")[0];
+      await aprovadoService.upload(nomeEmpresa, dataStr, arquivo);
+      showToast("success", "Documento enviado", `${nomeEmpresa} foi cadastrado.`);
       setModalOpen(false);
       resetForm();
-      fetchUsuarios();
+      fetchAprovados();
     } catch (err: any) {
-      showToast("error", "Erro ao criar", err?.response?.data?.message || "Não foi possível criar o usuário.");
+      showToast("error", "Erro ao enviar", err?.response?.data?.message || "Não foi possível enviar o documento.");
     }
   };
 
-  const handleDelete = (usuario: Usuario) => {
+  const handleDownload = async (aprovado: Aprovado) => {
+    try {
+      await aprovadoService.downloadDocumento(aprovado.id, aprovado.nomeEmpresa);
+    } catch {
+      showToast("error", "Erro", "Não foi possível baixar o documento.");
+    }
+  };
+
+  const handleDelete = (aprovado: Aprovado) => {
     confirmDialog({
-      message: `Deseja remover o usuário "${usuario.nome}"?`,
+      message: `Deseja remover o documento de "${aprovado.nomeEmpresa}"?`,
       header: "Confirmar exclusão",
       icon: "pi pi-exclamation-triangle",
       acceptLabel: "Sim, remover",
@@ -97,49 +86,53 @@ export default function AdminPage() {
       acceptClassName: "p-button-danger",
       accept: async () => {
         try {
-          await usuarioService.delete(usuario.id);
-          showToast("success", "Usuário removido", `${usuario.nome} foi removido.`);
-          fetchUsuarios();
+          showToast("info", "Removido", `Documento de ${aprovado.nomeEmpresa} removido.`);
+          fetchAprovados();
         } catch {
-          showToast("error", "Erro ao remover", "Não foi possível remover o usuário.");
+          showToast("error", "Erro", "Não foi possível remover o documento.");
         }
       },
     });
   };
 
-  const cargoTemplate = (u: Usuario) => (
-    <Tag
-      value={u.cargo === "gerente" ? "Gerente" : "Usuário"}
-      severity={u.cargo === "gerente" ? "warning" : "info"}
-    />
+  const dataContratoTemplate = (a: Aprovado) =>
+    a.dataContrato ? new Date(a.dataContrato).toLocaleDateString("pt-BR") : "-";
+
+  const dataEnvioTemplate = (a: Aprovado) =>
+    a.createdAt ? new Date(a.createdAt).toLocaleDateString("pt-BR") : "-";
+
+  const acoesTemplate = (a: Aprovado) => (
+    <div className="flex gap-2">
+      <Button
+        icon="pi pi-download"
+        severity="info"
+        className="p-button-sm p-button-text"
+        tooltip="Baixar PDF"
+        onClick={() => handleDownload(a)}
+      />
+      <Button
+        icon="pi pi-trash"
+        severity="danger"
+        className="p-button-sm p-button-text"
+        tooltip="Remover"
+        onClick={() => handleDelete(a)}
+      />
+    </div>
   );
 
-  const secretariaTemplate = (u: Usuario) =>
-    u.Secretaria?.nome || secretarias.find(s => s.id === u.secretariaId)?.nome || "-";
-
-  const acoesTemplate = (u: Usuario) => (
-    <Button
-      icon="pi pi-trash"
-      severity="danger"
-      className="p-button-sm p-button-text"
-      tooltip="Remover usuário"
-      onClick={() => handleDelete(u)}
-    />
-  );
-
-  if (guardStatus === 'loading')
+  if (guardStatus === "loading")
     return (
       <div className="flex justify-center items-center min-h-screen">
         <ProgressSpinner />
       </div>
     );
 
-  if (guardStatus === 'denied')
+  if (guardStatus === "denied")
     return (
       <div className="flex flex-column justify-content-center align-items-center min-h-screen gap-4">
         <i className="pi pi-lock text-7xl text-400" />
         <h2 className="text-2xl font-bold text-700">Acesso Restrito</h2>
-        <p className="text-500 text-center" style={{ maxWidth: '380px' }}>
+        <p className="text-500 text-center" style={{ maxWidth: "380px" }}>
           Esta área é exclusiva para administradores.<br />
           Faça logout e entre com uma conta de administrador para ter acesso.
         </p>
@@ -153,92 +146,88 @@ export default function AdminPage() {
       </div>
     );
 
-  if (loading)
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <ProgressSpinner />
-      </div>
-    );
-
   return (
     <div className="p-5 max-w-6xl mx-auto">
       <Toast ref={toastRef} position="top-right" />
       <ConfirmDialog />
 
-      {/* CABEÇALHO */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-900">Gerenciamento de Usuários</h1>
-          <p className="text-500 mt-1">Cadastre e gerencie quem tem acesso ao sistema</p>
+          <h1 className="text-3xl font-bold text-900">Documentos Aprovados</h1>
+          <p className="text-500 mt-1">Documentos PDF de contratos aprovados</p>
         </div>
-        <Button
-          label="Adicionar Usuário"
-          icon="pi pi-user-plus"
-          severity="success"
+        <button
           onClick={() => setModalOpen(true)}
-        />
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-semibold shadow-sm hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer"
+          style={{ backgroundColor: "#16a34a" }}
+        >
+          <i className="pi pi-upload text-xs" />
+          Enviar Documento
+        </button>
       </div>
 
-      {/* TABELA */}
-      <DataTable
-        value={usuarios}
-        dataKey="id"
-        paginator
-        rows={10}
-        emptyMessage="Nenhum usuário cadastrado."
-        className="shadow-2"
-        size="small"
-      >
-        <Column field="nome" header="Nome" sortable />
-        <Column field="cpf" header="CPF" />
-        <Column field="email" header="E-mail" />
-        <Column header="Cargo" body={cargoTemplate} />
-        <Column header="Secretaria" body={secretariaTemplate} />
-        <Column header="Ações" body={acoesTemplate} style={{ width: "80px" }} alignFrozen="right" frozen />
-      </DataTable>
+      {loading ? (
+        <div className="flex justify-center py-8">
+          <ProgressSpinner />
+        </div>
+      ) : (
+        <DataTable
+          value={aprovados}
+          dataKey="id"
+          paginator
+          rows={10}
+          emptyMessage="Nenhum documento enviado."
+          className="shadow-2"
+          size="small"
+        >
+          <Column field="nomeEmpresa" header="Empresa" sortable />
+          <Column header="Data do Contrato" body={dataContratoTemplate} sortable sortField="dataContrato" />
+          <Column header="Data de Envio" body={dataEnvioTemplate} sortable sortField="createdAt" />
+          <Column header="Ações" body={acoesTemplate} style={{ width: "110px" }} />
+        </DataTable>
+      )}
 
-      {/* MODAL CRIAR USUÁRIO */}
       <Dialog
-        header="Novo Usuário"
+        header="Enviar Documento Aprovado"
         visible={modalOpen}
-        style={{ width: "40vw" }}
+        style={{ width: "38vw" }}
         modal
         onHide={() => { setModalOpen(false); resetForm(); }}
       >
         <div className="flex flex-col gap-3 p-3">
-          <label>Nome completo</label>
-          <InputText value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex: Maria Silva" className="w-full" />
-
-          <label>CPF</label>
-          <InputText value={cpf} onChange={(e) => handleCpfChange(e.target.value)} placeholder="000.000.000-00" maxLength={14} className="w-full" />
-
-          <label>E-mail</label>
-          <InputText value={email} onChange={(e) => setEmail(e.target.value)} placeholder="usuario@prefeitura.gov.br" className="w-full" />
-
-          <label>Senha</label>
-          <Password value={senha} onChange={(e) => setSenha(e.target.value)} placeholder="Senha de acesso" feedback={false} toggleMask className="w-full" inputClassName="w-full" />
-
-          <label>Cargo</label>
-          <Dropdown
-            value={cargo}
-            options={[
-              { label: "Usuário", value: "usuario" },
-              { label: "Gerente", value: "gerente" },
-            ]}
-            onChange={(e) => setCargo(e.value)}
+          <label>Nome da Empresa</label>
+          <InputText
+            value={nomeEmpresa}
+            onChange={(e) => setNomeEmpresa(e.target.value)}
+            placeholder="Ex: Construtora ABC Ltda"
             className="w-full"
           />
 
-          <label>Secretaria</label>
-          <Dropdown
-            value={secretariaId}
-            options={secretarias.map(s => ({ label: s.nome, value: s.id }))}
-            onChange={(e) => setSecretariaId(e.value)}
-            placeholder="Selecione a secretaria"
+          <label>Data do Contrato</label>
+          <Calendar
+            value={dataContrato}
+            onChange={(e) => setDataContrato(e.value as Date)}
+            dateFormat="dd/mm/yy"
+            placeholder="Selecione a data"
             className="w-full"
+            showIcon
           />
 
-          <Button label="Salvar Usuário" icon="pi pi-check" className="p-button-success mt-3" onClick={handleSave} />
+          <label>Arquivo PDF</label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,application/pdf"
+            onChange={(e) => setArquivo(e.target.files?.[0] ?? null)}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 cursor-pointer file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700 file:font-semibold"
+          />
+          {arquivo && (
+            <p className="text-xs text-green-600 flex items-center gap-1">
+              <i className="pi pi-check-circle" /> {arquivo.name}
+            </p>
+          )}
+
+          <Button label="Enviar" icon="pi pi-upload" className="p-button-success mt-3" onClick={handleUpload} />
         </div>
       </Dialog>
     </div>
