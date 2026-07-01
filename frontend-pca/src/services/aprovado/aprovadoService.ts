@@ -14,6 +14,11 @@ const aprovadoService = {
     return res.data;
   },
 
+  getById: async (id: string): Promise<Aprovado> => {
+    const res = await api.get(`/aprovado/${id}`);
+    return res.data;
+  },
+
   upload: async (nomeEmpresa: string, dataContrato: string, file: File): Promise<Aprovado> => {
     const formData = new FormData();
     formData.append("nomeEmpresa", nomeEmpresa);

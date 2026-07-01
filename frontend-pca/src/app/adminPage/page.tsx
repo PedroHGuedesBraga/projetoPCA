@@ -7,7 +7,6 @@ import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
 import { InputText } from "primereact/inputtext";
 import { Toast } from "primereact/toast";
-import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Calendar } from "primereact/calendar";
 import { useRouteGuard } from "@/hooks/useRouteGuard";
@@ -24,6 +23,10 @@ export default function AdminPage() {
   const [dataContrato, setDataContrato] = useState<Date | null>(null);
   const [arquivo, setArquivo] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [detalheOpen, setDetalheOpen] = useState(false);
+  const [detalheAprovado, setDetalheAprovado] = useState<Aprovado | null>(null);
+  const [loadingDetalhe, setLoadingDetalhe] = useState(false);
 
   const showToast = (severity: "success" | "error" | "warn" | "info", summary: string, detail?: string) => {
     toastRef.current?.show({ severity, summary, detail, life: 3000 });
@@ -68,31 +71,26 @@ export default function AdminPage() {
     }
   };
 
+  const handleVisualizar = async (aprovado: Aprovado) => {
+    setLoadingDetalhe(true);
+    setDetalheOpen(true);
+    try {
+      const data = await aprovadoService.getById(aprovado.id);
+      setDetalheAprovado(data);
+    } catch {
+      showToast("error", "Erro", "Não foi possível carregar os detalhes.");
+      setDetalheOpen(false);
+    } finally {
+      setLoadingDetalhe(false);
+    }
+  };
+
   const handleDownload = async (aprovado: Aprovado) => {
     try {
       await aprovadoService.downloadDocumento(aprovado.id, aprovado.nomeEmpresa);
     } catch {
       showToast("error", "Erro", "Não foi possível baixar o documento.");
     }
-  };
-
-  const handleDelete = (aprovado: Aprovado) => {
-    confirmDialog({
-      message: `Deseja remover o documento de "${aprovado.nomeEmpresa}"?`,
-      header: "Confirmar exclusão",
-      icon: "pi pi-exclamation-triangle",
-      acceptLabel: "Sim, remover",
-      rejectLabel: "Cancelar",
-      acceptClassName: "p-button-danger",
-      accept: async () => {
-        try {
-          showToast("info", "Removido", `Documento de ${aprovado.nomeEmpresa} removido.`);
-          fetchAprovados();
-        } catch {
-          showToast("error", "Erro", "Não foi possível remover o documento.");
-        }
-      },
-    });
   };
 
   const dataContratoTemplate = (a: Aprovado) =>
@@ -102,22 +100,13 @@ export default function AdminPage() {
     a.createdAt ? new Date(a.createdAt).toLocaleDateString("pt-BR") : "-";
 
   const acoesTemplate = (a: Aprovado) => (
-    <div className="flex gap-2">
-      <Button
-        icon="pi pi-download"
-        severity="info"
-        className="p-button-sm p-button-text"
-        tooltip="Baixar PDF"
-        onClick={() => handleDownload(a)}
-      />
-      <Button
-        icon="pi pi-trash"
-        severity="danger"
-        className="p-button-sm p-button-text"
-        tooltip="Remover"
-        onClick={() => handleDelete(a)}
-      />
-    </div>
+    <Button
+      label="Visualizar"
+      icon="pi pi-eye"
+      severity="info"
+      className="p-button-sm p-button-text"
+      onClick={() => handleVisualizar(a)}
+    />
   );
 
   if (guardStatus === "loading")
@@ -149,7 +138,6 @@ export default function AdminPage() {
   return (
     <div className="p-5 max-w-6xl mx-auto">
       <Toast ref={toastRef} position="top-right" />
-      <ConfirmDialog />
 
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -186,6 +174,50 @@ export default function AdminPage() {
           <Column header="Ações" body={acoesTemplate} style={{ width: "110px" }} />
         </DataTable>
       )}
+
+      <Dialog
+        header="Detalhes do Contrato"
+        visible={detalheOpen}
+        style={{ width: "38vw" }}
+        modal
+        onHide={() => { setDetalheOpen(false); setDetalheAprovado(null); }}
+      >
+        {loadingDetalhe ? (
+          <div className="flex justify-center py-6">
+            <ProgressSpinner />
+          </div>
+        ) : detalheAprovado && (
+          <div className="flex flex-col gap-4 p-3">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs text-gray-500 font-semibold uppercase">Empresa</span>
+              <span className="text-lg font-bold text-gray-800">{detalheAprovado.nomeEmpresa}</span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-xs text-gray-500 font-semibold uppercase">Data do Contrato</span>
+              <span className="text-gray-700">
+                {detalheAprovado.dataContrato
+                  ? new Date(detalheAprovado.dataContrato).toLocaleDateString("pt-BR")
+                  : "—"}
+              </span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-xs text-gray-500 font-semibold uppercase">Data de Envio</span>
+              <span className="text-gray-700">
+                {detalheAprovado.createdAt
+                  ? new Date(detalheAprovado.createdAt).toLocaleDateString("pt-BR")
+                  : "—"}
+              </span>
+            </div>
+            <Button
+              label="Baixar Documento"
+              icon="pi pi-download"
+              severity="info"
+              className="mt-2"
+              onClick={() => handleDownload(detalheAprovado)}
+            />
+          </div>
+        )}
+      </Dialog>
 
       <Dialog
         header="Enviar Documento Aprovado"
