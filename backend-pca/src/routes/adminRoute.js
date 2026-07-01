@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const adminController = require("../controllers/adminController");
+const loginLimiter = require("../middleware/rateLimit");
+
 
 /**
  * @swagger
@@ -97,7 +99,7 @@ router.post("/", adminController.create);
  *       404:
  *         description: Administrador não encontrado
  */
-router.post("/login", adminController.login);
+router.post("/login", loginLimiter, adminController.login);
 
 /**
  * @swagger

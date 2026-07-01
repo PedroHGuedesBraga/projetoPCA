@@ -22,7 +22,7 @@ const sequelize = new Sequelize(
 async function connectDB() {
   try {
     await sequelize.authenticate();
-    console.log("✅ Conectado ao banco PostgreSQL (Neon) com sucesso!");
+    console.log("✅ Conectado ao banco  com sucesso!");
   } catch (error) {
     console.error("❌ Erro ao conectar ao banco:", error);
   }
