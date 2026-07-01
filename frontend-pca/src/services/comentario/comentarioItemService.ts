@@ -6,6 +6,7 @@ export interface Comentario {
   texto: string;
   autorTipo: "admin" | "usuario";
   autorId: string;
+  autorNome: string;
   createdAt: string;
 }
 

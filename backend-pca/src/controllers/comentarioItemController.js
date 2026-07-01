@@ -8,7 +8,26 @@ const comentarioItemController = {
         where: { itemId },
         order: [["createdAt", "ASC"]],
       });
-      res.json(comentarios);
+
+      const adminIds = [...new Set(comentarios.filter(c => c.autorTipo === "admin" && c.autorId).map(c => c.autorId))];
+      const usuarioIds = [...new Set(comentarios.filter(c => c.autorTipo === "usuario" && c.autorId).map(c => c.autorId))];
+
+      const [admins, usuarios] = await Promise.all([
+        adminIds.length ? Admin.findAll({ where: { id: adminIds }, attributes: ["id", "nome"] }) : [],
+        usuarioIds.length ? Usuario.findAll({ where: { id: usuarioIds }, attributes: ["id", "nome"] }) : [],
+      ]);
+
+      const adminMap = Object.fromEntries(admins.map(a => [a.id, a.nome]));
+      const usuarioMap = Object.fromEntries(usuarios.map(u => [u.id, u.nome]));
+
+      const result = comentarios.map(c => ({
+        ...c.toJSON(),
+        autorNome: c.autorTipo === "admin"
+          ? (adminMap[c.autorId] || "Admin")
+          : (usuarioMap[c.autorId] || "Usuário"),
+      }));
+
+      res.json(result);
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Erro ao buscar comentários", error });
@@ -65,7 +84,16 @@ const comentarioItemController = {
         }
       }).catch((err) => console.error("❌ Erro ao criar notificação de comentário:", err.message));
 
-      res.status(201).json(comentario);
+      let autorNome = autorTipo === "admin" ? "Admin" : "Usuário";
+      if (autorTipo === "admin") {
+        const admin = await Admin.findByPk(autorId, { attributes: ["nome"] });
+        if (admin) autorNome = admin.nome;
+      } else {
+        const usuario = await Usuario.findByPk(autorId, { attributes: ["nome"] });
+        if (usuario) autorNome = usuario.nome;
+      }
+
+      res.status(201).json({ ...comentario.toJSON(), autorNome });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Erro ao criar comentário", error });

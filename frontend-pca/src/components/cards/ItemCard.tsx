@@ -12,6 +12,7 @@ import { ProgressSpinner } from "primereact/progressspinner";
 import { Item } from "@/types/item";
 import { comentarioItemService, Comentario } from "@/services/comentario/comentarioItemService";
 import { useNotificacao } from "@/context/NotificacaoContext";
+import { authService } from "@/services/authService";
 
 // Extende Item com flags de notificação embarcadas nos dados
 // Assim o DataTable detecta mudança de valor e re-renderiza as células
@@ -254,7 +255,7 @@ export default function ItensDataTable({
                       className={`flex flex-col gap-0.5 ${isMinha ? "items-end" : "items-start"}`}
                     >
                       <span className="text-xs font-semibold px-1" style={{ color: isMinha ? "#2563eb" : "#7c3aed" }}>
-                        {isMinha ? "Você" : c.autorTipo === "admin" ? "Admin" : "Usuário"}
+                        {isMinha ? (authService.getUserName() || "Você") : c.autorNome}
                       </span>
                       <div
                         className="px-4 py-2.5 text-sm leading-relaxed max-w-[85%]"
