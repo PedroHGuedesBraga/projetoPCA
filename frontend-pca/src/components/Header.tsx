@@ -80,6 +80,16 @@ const Header = () => {
         </Link>
       )}
 
+      {isAdmin && (
+        <Link
+          href="/adminPage"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-white border border-white/30 hover:bg-white/20 hover:border-white/60 transition-all duration-200"
+        >
+          <i className="pi pi-verified text-sm"></i>
+          <span>APROVADOS</span>
+        </Link>
+      )}
+
       <span className="text-white opacity-40 mx-1">|</span>
 
       <button
