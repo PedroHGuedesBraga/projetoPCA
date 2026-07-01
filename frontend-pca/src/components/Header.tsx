@@ -86,7 +86,7 @@ const Header = () => {
           className="flex items-center gap-2 px-3 py-2 rounded-lg text-white border border-white/30 hover:bg-white/20 hover:border-white/60 transition-all duration-200"
         >
           <i className="pi pi-verified text-sm"></i>
-          <span>APROVADOS</span>
+          <span>CONCLUIDOS</span>
         </Link>
       )}
 
