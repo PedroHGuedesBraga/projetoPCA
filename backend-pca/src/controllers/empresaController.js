@@ -28,7 +28,7 @@ const empresaController = {
             const empresas = await Empresa.findAll();
             res.status(200).json(empresas);
         }catch(error){
-            res.status(500).json({error: error.message});
+            if (!empresa) return res.status(404).json({ error: "Empresa não encontrada" });
         }
     },
     getById: async(req,res)=>{
@@ -38,7 +38,7 @@ const empresaController = {
             res.status(200).json(empresa);
         }
         catch(error){
-            res.status(500).json({error: error.message});
+            if (!empresa) return res.status(404).json({ error: "Empresa não encontrada" });
         }   
     }
 

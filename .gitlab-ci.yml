@@ -1,0 +1,41 @@
+stages:
+  - test
+  - build
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+
+cache:
+  paths:
+    - backend-pca/node_modules/
+
+test_backend:
+  image: node:22
+  stage: test
+  script:
+    - cd backend-pca
+    - npm install
+    - npm test
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+
+build_backend:
+  image: docker:latest
+  services:
+    - docker:dind
+  stage: build
+  script:
+    - docker build -t backend-pca ./backend-pca
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+
+build_frontend:
+  image: docker:latest
+  services:
+    - docker:dind
+  stage: build
+  script:
+    - docker build -t frontend-pca ./frontend-pca
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'

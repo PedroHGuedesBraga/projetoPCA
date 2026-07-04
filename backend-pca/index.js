@@ -28,6 +28,10 @@ app.use("/api", Router);
 
 setupSwagger(app);
 
+if (process.env.NODE_ENV !== 'test') {
+  startServer();
+}
+
 async function startServer() {
   try {
     await connectDB();
@@ -54,4 +58,4 @@ async function startServer() {
   }
 }
 
-startServer();
+module.exports = app;

@@ -16,23 +16,28 @@ const usuarioController = {
 
             const hashedPassword = await bcrypt.hash(senha, 10);
 
+            // ... código anterior do create
             const usuario = await Usuario.create({
                 nome,
                 email,
                 cpf,
                 senha: hashedPassword,
-                cargo, // "usuario" ou "gerente"
+                cargo,
                 secretariaId,
             });
 
-            // criar token JWT
+            // Criar token JWT
             const token = jwt.sign(
                 { id: usuario.id, email: usuario.email, cargo: usuario.cargo },
                 process.env.JWT_USER_SECRET,
                 { expiresIn: "1d" }
             );
 
-            res.status(201).json({ usuario, token });
+            // ✨ CORREÇÃO: Converte para objeto plano e remove a senha antes de enviar
+            const usuarioResponse = usuario.toJSON();
+            delete usuarioResponse.senha;
+
+            res.status(201).json({ usuario: usuarioResponse, token });
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: "Erro ao criar usuário", error });

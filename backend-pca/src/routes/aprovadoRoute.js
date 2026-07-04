@@ -12,9 +12,10 @@ router.post(
 );
 
 router.get("/", authAdmin, aprovadoController.getAll);
-router.get("/:id", authAdmin, aprovadoController.getById);
-
 // Quando bater aqui, baixa o arquivo
 router.get("/documento/:id", authAdmin, aprovadoController.baixarDocumento);
+router.get("/:id", authAdmin, aprovadoController.getById);
+
+
 
 module.exports = router;
