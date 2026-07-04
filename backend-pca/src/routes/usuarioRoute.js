@@ -117,7 +117,7 @@ router.post("/login", usuarioController.login);
  *       200:
  *         description: Lista de usuários retornada com sucesso
  */
-router.get("/", usuarioController.getAll);
+router.get("/", authAdmin,usuarioController.getAll);
 
 /**
  * @swagger
@@ -140,7 +140,7 @@ router.get("/", usuarioController.getAll);
  *       404:
  *         description: Usuário não encontrado
  */
-router.get("/:id", usuarioController.getById);
+router.get("/:id", authAdmin,usuarioController.getById);
 
 /**
  * @swagger

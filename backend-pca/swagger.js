@@ -1,6 +1,6 @@
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
-
+const authAdmin = require("./src/middleware/authAdmin");
 const options = {
   definition: {
     openapi: "3.0.0",
@@ -139,7 +139,7 @@ const options = {
 const swaggerSpec = swaggerJsdoc(options);
 
 function setupSwagger(app) {
-  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  app.use("/api-docs", authAdmin ,swaggerUi.serve, swaggerUi.setup(swaggerSpec));
   console.log("📘 Swagger disponível em: http://localhost:3000/api-docs");
 }
 

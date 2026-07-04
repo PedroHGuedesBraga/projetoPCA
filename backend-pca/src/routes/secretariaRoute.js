@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const secretariaController = require("../controllers/secretariaController");
-
+const authAny = require("../middleware/authAny");
+const authAdmin = require("../middleware/authAdmin");
 /**
  * @swagger
  * components:
@@ -46,7 +47,7 @@ const secretariaController = require("../controllers/secretariaController");
  *       400:
  *         description: Erro ao criar secretaria
  */
-router.post("/", secretariaController.create);
+router.post("/", authAdmin, secretariaController.create);
 
 /**
  * @swagger
@@ -60,7 +61,7 @@ router.post("/", secretariaController.create);
  *       200:
  *         description: Lista de secretarias retornada com sucesso
  */
-router.get("/",  secretariaController.getAll);
+router.get("/", authAny, secretariaController.getAll);
 
 /**
  * @swagger
@@ -83,7 +84,7 @@ router.get("/",  secretariaController.getAll);
  *       404:
  *         description: Secretaria não encontrada
  */
-router.get("/:id",  secretariaController.getById);
+router.get("/:id", authAny, secretariaController.getById);
 
 /**
  * @swagger
@@ -104,7 +105,7 @@ router.get("/:id",  secretariaController.getById);
  *       200:
  *         description: Contratos retornados com sucesso
  */
-router.get("/:id/contratos-organizados", secretariaController.getContratosOrganizados);
+router.get("/:id/contratos-organizados", authAdmin, secretariaController.getContratosOrganizados);
 
 /**
  * @swagger
@@ -133,7 +134,7 @@ router.get("/:id/contratos-organizados", secretariaController.getContratosOrgani
  *       404:
  *         description: Secretaria não encontrada
  */
-router.put("/:id", secretariaController.update);
+router.put("/:id", authAdmin, secretariaController.update);
 
 /**
  * @swagger
@@ -156,6 +157,6 @@ router.put("/:id", secretariaController.update);
  *       404:
  *         description: Secretaria não encontrada
  */
-router.delete("/:id", secretariaController.delete);
+router.delete("/:id", authAdmin, secretariaController.delete);
 
 module.exports = router;

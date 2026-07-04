@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const adminController = require("../controllers/adminController");
 const loginLimiter = require("../middleware/rateLimit");
-
+const authAdmin = require("../middleware/authAdmin");
 
 /**
  * @swagger
@@ -65,7 +65,7 @@ const loginLimiter = require("../middleware/rateLimit");
  *       400:
  *         description: Erro ao criar administrador
  */
-router.post("/", adminController.create);
+router.post("/",authAdmin, adminController.create);
 
 /**
  * @swagger
@@ -113,7 +113,7 @@ router.post("/login", loginLimiter, adminController.login);
  *       200:
  *         description: Lista de administradores retornada com sucesso
  */
-router.get("/", adminController.getAll);
+router.get("/",authAdmin,adminController.getAll);
 
 /**
  * @swagger
@@ -136,7 +136,7 @@ router.get("/", adminController.getAll);
  *       404:
  *         description: Administrador não encontrado
  */
-router.get("/:id", adminController.getById);
+router.get("/:id",authAdmin,adminController.getById);
 
 /**
  * @swagger
@@ -165,7 +165,7 @@ router.get("/:id", adminController.getById);
  *       404:
  *         description: Administrador não encontrado
  */
-router.put("/:id", adminController.update);
+router.put("/:id", authAdmin, adminController.update);
 
 /**
  * @swagger
@@ -188,6 +188,6 @@ router.put("/:id", adminController.update);
  *       404:
  *         description: Administrador não encontrado
  */
-router.delete("/:id", adminController.delete);
+router.delete("/:id",authAdmin, adminController.delete);
 
 module.exports = router;

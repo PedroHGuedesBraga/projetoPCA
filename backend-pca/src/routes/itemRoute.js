@@ -78,7 +78,7 @@ const authAny = require("../middleware/authAny");
  *       400:
  *         description: Erro ao criar item
  */
-router.post("/", itemController.create);
+router.post("/",authAny, itemController.create);
 
 /**
  * @swagger
@@ -92,7 +92,7 @@ router.post("/", itemController.create);
  *       200:
  *         description: Lista de itens retornada com sucesso
  */
-router.get("/", itemController.getAll);
+router.get("/", authAny, itemController.getAll);
 
 /**
  * @swagger
@@ -115,7 +115,7 @@ router.get("/", itemController.getAll);
  *       404:
  *         description: Item não encontrado
  */
-router.get("/:id", itemController.getById);
+router.get("/:id", authAny, itemController.getById);
 
 /**
  * @swagger
@@ -144,7 +144,7 @@ router.get("/:id", itemController.getById);
  *       404:
  *         description: Item não encontrado
  */
-router.put("/:id", itemController.update);
+router.put("/:id", authAny, itemController.update);
 
 /**
  * @swagger

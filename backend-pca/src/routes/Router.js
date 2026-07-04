@@ -8,7 +8,9 @@ const adminRoute = require('./adminRoute');
 const notificacaoRoute = require('./notificacaoRoute');
 const planoAnualRoute = require('./planoAnualRoute');
 const aprovadoRoute = require('./aprovadoRoute');
+const empresaRoute = require('./empresaRoute');
 
+Router.use('/empresa', empresaRoute);
 Router.use('/aprovado', aprovadoRoute);
 Router.use('/secretaria', secretariaRoute);
 Router.use('/contrato', contratoRoute);

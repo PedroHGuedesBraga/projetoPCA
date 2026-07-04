@@ -1,14 +1,13 @@
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../../db");
-const Secretaria = require("./Secretaria");
 
-const Usuario = sequelize.define("Usuario", {
+const Empresa = sequelize.define("Empresa", {
   id: {
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
-  cpf: {
+  cnpj: {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
@@ -17,18 +16,19 @@ const Usuario = sequelize.define("Usuario", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  email: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true,
-  },
-  senha: {
-    type: DataTypes.STRING,
+  valorContrato: {
+    type: DataTypes.BIGINT,
     allowNull: false,
   },
-  cargo: {
-    type: DataTypes.ENUM("gerente", "usuario"),
-    allowNull: false,
-  },
+  dataInicioContrato:{
+        type: DataTypes.DATE,
+        allowNull: false,
+    },
+  dataTerminoContrato:{
+        type: DataTypes.DATE,
+        allowNull: false,
+    },
+  
 });
-module.exports = Usuario;
+
+module.exports = Empresa;

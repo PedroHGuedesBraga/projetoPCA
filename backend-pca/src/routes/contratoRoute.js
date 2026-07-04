@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const contratoController = require("../controllers/contratoController");
-
+const authAny = require("../middleware/authAny");
 
 /**
  * @swagger
@@ -68,7 +68,7 @@ const contratoController = require("../controllers/contratoController");
  *       400:
  *         description: Erro ao criar contrato
  */
-router.post("/", contratoController.create);
+router.post("/", authAny,contratoController.create);
 
 /**
  * @swagger
@@ -82,7 +82,7 @@ router.post("/", contratoController.create);
  *       200:
  *         description: Lista de contratos retornada com sucesso
  */
-router.get("/", contratoController.getAll);
+router.get("/",authAny, contratoController.getAll);
 
 /**
  * @swagger
@@ -105,7 +105,7 @@ router.get("/", contratoController.getAll);
  *       404:
  *         description: Contrato não encontrado
  */
-router.get("/:id", contratoController.getById);
+router.get("/:id", authAny, contratoController.getById);
 
 /**
  * @swagger
@@ -134,7 +134,7 @@ router.get("/:id", contratoController.getById);
  *       404:
  *         description: Contrato não encontrado
  */
-router.put("/:id", contratoController.update);
+router.put("/:id", authAny, contratoController.update);
 
 /**
  * @swagger
@@ -157,9 +157,9 @@ router.put("/:id", contratoController.update);
  *       404:
  *         description: Contrato não encontrado
  */
-router.delete("/:id", contratoController.delete);
-router.post("/clonar-ano", contratoController.clonarAno);
-router.get("/:id/itens", contratoController.getItensByContrato);
-router.patch("/:id/mudar-mes", contratoController.mudarMes);
+router.delete("/:id", authAny, contratoController.delete);
+router.post("/clonar-ano", authAny, contratoController.clonarAno);
+router.get("/:id/itens", authAny, contratoController.getItensByContrato);
+router.patch("/:id/mudar-mes", authAny, contratoController.mudarMes);
 
 module.exports = router;
