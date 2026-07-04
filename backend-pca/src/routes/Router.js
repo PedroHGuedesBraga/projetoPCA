@@ -9,7 +9,11 @@ const notificacaoRoute = require('./notificacaoRoute');
 const planoAnualRoute = require('./planoAnualRoute');
 const aprovadoRoute = require('./aprovadoRoute');
 const empresaRoute = require('./empresaRoute');
+const contratoEmpresaRoute = require('./contratoEmpresaRoute');
+const descontoEmpresaRoute = require('./descontoEmpresaRoute');
 
+Router.use('/descontoEmpresa', descontoEmpresaRoute);
+Router.use('/contratoEmpresa', contratoEmpresaRoute);
 Router.use('/empresa', empresaRoute);
 Router.use('/aprovado', aprovadoRoute);
 Router.use('/secretaria', secretariaRoute);

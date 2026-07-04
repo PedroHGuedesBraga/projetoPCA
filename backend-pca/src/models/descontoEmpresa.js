@@ -8,7 +8,7 @@ const descontoEmpresa = sequelize.define("descontoEmpresa", {
         primaryKey: true,
     },
 
-    empresaId: {
+   contratoEmpresaId: {
         type: DataTypes.UUID,
         allowNull: false,
     },

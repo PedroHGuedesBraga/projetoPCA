@@ -6,19 +6,31 @@ const Notificacao = require("./Notificacao");
 const Usuario = require("./Usuario");
 const Admin = require("./Admin");
 const Empresa = require("./Empresa")
-const descontoEmpresa = require("./DescontoEmpresa");
-
+const contratoEmpresa = require("./contratoEmpresa");
+const descontoEmpresa = require("./descontoEmpresa");
 // Empresa -> DescontoEmpresa
-Empresa.hasMany(descontoEmpresa, {
+Empresa.hasMany(contratoEmpresa, {
     foreignKey: "empresaId",
+    as: "contratos",
+    onDelete: "CASCADE",
+});
+
+contratoEmpresa.belongsTo(Empresa, {
+    foreignKey: "empresaId",
+    as: "empresa",
+});
+
+contratoEmpresa.hasMany(descontoEmpresa, {
+    foreignKey: "contratoEmpresaId",
     as: "descontos",
     onDelete: "CASCADE",
 });
 
-descontoEmpresa.belongsTo(Empresa, {
-    foreignKey: "empresaId",
-    as: "empresa",
+descontoEmpresa.belongsTo(contratoEmpresa, {
+    foreignKey: "contratoEmpresaId",
+    as: "contrato",
 });
+
 
 // Secretaria -> Contrato
 Secretaria.hasMany(Contrato, {
@@ -56,4 +68,4 @@ Usuario.belongsTo(Secretaria, { foreignKey: "secretariaId" });
 Usuario.hasMany(Notificacao, { foreignKey: "usuarioId", onDelete: "CASCADE" });
 Notificacao.belongsTo(Usuario, { foreignKey: "usuarioId" });
 
-module.exports = { Secretaria, Contrato, Item, ComentarioItem, Notificacao, Usuario, Admin, Empresa, descontoEmpresa };
+module.exports = { Secretaria, Contrato, Item, ComentarioItem, Notificacao, Usuario, Admin, Empresa, contratoEmpresa, descontoEmpresa };

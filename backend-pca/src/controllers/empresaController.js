@@ -5,15 +5,17 @@ const empresaController = {
 
     create:async (req, res) =>{
 
-        const { cnpj, nome, valorContrato, dataInicioContrato, dataTerminoContrato } = req.body;
+        const {cnpj, nome,} = req.body;
 
         try {
+            const existingEmpresa = await Empresa.findOne({ where: { cnpj } });
+            if (existingEmpresa) {
+                return res.status(400).json({ error: "CNPJ já cadastrado." });
+            }
             const empresa = await Empresa.create({
                 cnpj,
-                nome,
-                valorContrato,
-                dataInicioContrato,
-                dataTerminoContrato
+                nome
+    
             });
             res.status(201).json(empresa);
         } catch (error) {

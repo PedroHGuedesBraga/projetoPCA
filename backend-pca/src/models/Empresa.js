@@ -16,19 +16,6 @@ const Empresa = sequelize.define("Empresa", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  valorContrato: {
-    type: DataTypes.BIGINT,
-    allowNull: false,
-  },
-  dataInicioContrato:{
-        type: DataTypes.DATE,
-        allowNull: false,
-    },
-  dataTerminoContrato:{
-        type: DataTypes.DATE,
-        allowNull: false,
-    },
-  
 });
 
 module.exports = Empresa;
