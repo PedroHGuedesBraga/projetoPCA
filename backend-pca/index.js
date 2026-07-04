@@ -5,7 +5,7 @@ require("dotenv").config({
 const express = require("express");
 const cors = require("cors");
 
-const { connectDB, syncDatabase } = require("./db");
+const { connectDB, syncDatabase, createInitialAdmin } = require("./db");
 
 const Router = require("./src/routes/Router");
 const setupSwagger = require("./swagger");
@@ -33,6 +33,8 @@ async function startServer() {
     await connectDB();
 
     await syncDatabase();
+    
+    await createInitialAdmin();
 
     await verificarVencimentos();
 

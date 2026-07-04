@@ -1,5 +1,7 @@
 const { Sequelize } = require("sequelize");
 require("dotenv").config();
+const bcrypt = require("bcrypt");
+
 
 const sequelize = new Sequelize(
   process.env.DB_NAME,
@@ -10,12 +12,6 @@ const sequelize = new Sequelize(
     port: process.env.DB_PORT,
     dialect: "postgres",
     logging: false,
-    dialectOptions: {
-      ssl: {
-        require: true,
-        rejectUnauthorized: false,
-      },
-    },
   }
 );
 
@@ -26,6 +22,27 @@ async function connectDB() {
   } catch (error) {
     console.error("❌ Erro ao conectar ao banco:", error);
     throw error;
+  }
+}
+async function createInitialAdmin() {
+  const Admin = require("./src/models/Admin");
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  const adminCPF = process.env.ADMIN_CPF;
+  const hashedPassword = await bcrypt.hash(adminPassword, 10);
+  const adminExists = await Admin.findOne({
+    where: { email: "admin@sistema.com" },
+  });
+
+  if (!adminExists) {
+    await Admin.create({
+      nome: "Super Admin",
+      email: "admin@sistema.com",
+      cpf: adminCPF,
+      senha: hashedPassword,
+      cargo: "admin",
+    });
+
+    console.log("✅ Admin inicial criado");
   }
 }
 
@@ -59,4 +76,5 @@ module.exports = {
   sequelize,
   connectDB,
   syncDatabase,
+  createInitialAdmin,
 };
