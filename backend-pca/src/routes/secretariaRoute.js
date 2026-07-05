@@ -105,7 +105,7 @@ router.get("/:id", authAny, secretariaController.getById);
  *       200:
  *         description: Contratos retornados com sucesso
  */
-router.get("/:id/contratos-organizados", authAdmin, secretariaController.getContratosOrganizados);
+router.get("/:id/contratos-organizados", authAny, secretariaController.getContratosOrganizados);
 
 /**
  * @swagger

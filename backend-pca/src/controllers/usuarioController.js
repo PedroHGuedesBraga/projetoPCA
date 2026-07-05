@@ -126,9 +126,10 @@ const usuarioController = {
                 process.env.JWT_USER_SECRET,
                 { expiresIn: "1d" }
             );
+            const usuarioResponse = usuario.toJSON();
+            delete usuarioResponse.senha;
             // Extrair apenas os campos seguros
-            const { id, nome, cargo, secretariaId } = usuario;
-            res.json({ usuario: { id, nome, cpf, cargo, secretariaId }, token });
+            res.json({ usuario: usuarioResponse, token });
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: "Erro ao fazer login", error });
