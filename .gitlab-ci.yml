@@ -196,7 +196,10 @@ ready_to_prod:
       ADMIN_PASSWORD=$ADMIN_PASSWORD
       ADMIN_CPF=$ADMIN_CPF
       EOF
-
+    - |
+      cat > frontend-pca/.env.local <<EOF
+      NEXT_PUBLIC_API_URL=http://localhost:3000
+      EOF
     - docker compose up -d --build
 
     # Espera os containers iniciarem
