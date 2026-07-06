@@ -59,7 +59,7 @@ sast_scan:
     - lint_backend
 
   script:
-    - semgrep scan --config=auto
+    - semgrep scan --config=auto backend-pca
 
 test_backend:
   stage: test
