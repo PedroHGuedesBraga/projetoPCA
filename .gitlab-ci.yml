@@ -3,6 +3,7 @@ stages:
   - security
   - test
   - build
+  - readyToProd
 
 # Configuração global de cache para não baixar a internet a cada job
 cache:
@@ -137,3 +138,79 @@ build_frontend:
 
   script:
     - docker build -t frontend-pca ./frontend-pca
+
+ready_to_prod:
+  stage: readyToProd
+  image: docker:latest
+
+  services:
+    - docker:dind
+
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+  # PostgreSQL
+    POSTGRES_DB: pca_test
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+
+    # Backend
+    DB_HOST: banco
+    DB_PORT: "5432"
+    DB_USER: postgres
+    DB_PASSWORD: postgres
+    DB_NAME: pca_test
+    PORT: "3000"
+    NODE_ENV: test
+    JWT_USER_SECRET: teste-user
+    JWT_ADMIN_SECRET: teste-admin
+    FRONTEND_URL: http://localhost:3000
+    ADMIN_PASSWORD: admin123
+    ADMIN_CPF: "11111111111"
+
+  needs:
+    - build_backend
+    - build_frontend
+
+  before_script:
+    - apk add --no-cache docker-cli-compose
+  script:
+    - |
+      cat > .env <<EOF
+      POSTGRES_DB=$POSTGRES_DB
+      POSTGRES_USER=$POSTGRES_USER
+      POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+      EOF
+
+    - |
+      cat > backend-pca/.env <<EOF
+      DB_HOST=$DB_HOST
+      DB_PORT=$DB_PORT
+      DB_USER=$DB_USER
+      DB_PASSWORD=$DB_PASSWORD
+      DB_NAME=$DB_NAME
+      PORT=$PORT
+      NODE_ENV=$NODE_ENV
+      JWT_USER_SECRET=$JWT_USER_SECRET
+      JWT_ADMIN_SECRET=$JWT_ADMIN_SECRET
+      FRONTEND_URL=$FRONTEND_URL
+      ADMIN_PASSWORD=$ADMIN_PASSWORD
+      ADMIN_CPF=$ADMIN_CPF
+      EOF
+
+    - docker compose up -d --build
+
+    # Espera os containers iniciarem
+    - sleep 30
+
+    # Mostra os containers
+    - docker compose ps
+
+    # Se algum container morreu, o job falha
+    - test "$(docker inspect -f '{{.State.Running}}' backend-pca)" = "true"
+    - test "$(docker inspect -f '{{.State.Running}}' frontend-pca)" = "true"
+    - test "$(docker inspect -f '{{.State.Running}}' banco-pca)" = "true"
+    - test "$(docker inspect -f '{{.State.Running}}' nginx-pca)" = "true"
+
+  after_script:
+    - docker compose logs
+    - docker compose down -v
