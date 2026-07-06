@@ -9,7 +9,7 @@ services:
     expose:
       - "3000"
     volumes:
-      - ./backend-pca/uploads/pdfs:/app/uploads
+     - ./backend-pca/uploads:/app/uploads
     depends_on:
       banco:
         condition: service_healthy
