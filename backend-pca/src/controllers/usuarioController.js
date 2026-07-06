@@ -123,7 +123,7 @@ const usuarioController = {
             const token = jwt.sign(
                 { id: usuario.id, cpf: usuario.cpf, cargo: usuario.cargo },
                 process.env.JWT_USER_SECRET,
-                { expiresIn: "1d" }
+                { expiresIn: "30m" }
             );
             const usuarioResponse = usuario.toJSON();
             delete usuarioResponse.senha;

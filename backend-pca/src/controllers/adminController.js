@@ -113,7 +113,7 @@ const adminController = {
     const token = jwt.sign(
       { id: admin.id, email: admin.email, cargo: admin.cargo },
       process.env.JWT_ADMIN_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: "30m" }
     );
 
     // Extrair apenas os campos seguros
