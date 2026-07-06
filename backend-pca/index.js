@@ -39,11 +39,13 @@ async function startServer() {
     await syncDatabase();
     
     await createInitialAdmin();
+    
+    createInitialSecretarias();
+
 
     await verificarVencimentos();
 
-    createInitialSecretarias();
-
+    
     setInterval(
       verificarVencimentos,
       24 * 60 * 60 * 1000
