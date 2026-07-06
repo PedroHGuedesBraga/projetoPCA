@@ -1,0 +1,7 @@
+[allowlist]
+description = "Swagger fake JWT"
+
+fingerprints = [
+  "b47080222f7c0c1d9a61e17fbea628cfdc825b5e:backend-pca/src/routes/adminRoute.js:generic-api-key:96",
+  "b47080222f7c0c1d9a61e17fbea628cfdc825b5e:backend-pca/src/routes/usuarioRoute.js:generic-api-key:100"
+]

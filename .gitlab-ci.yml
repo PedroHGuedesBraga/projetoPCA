@@ -47,7 +47,7 @@ secret_scan:
     - lint_backend
 
   script:
-    - gitleaks detect --source . --verbose
+    - gitleaks detect --source . --config .gitleaks.toml --verbose
     
 sast_scan:
   stage: security
