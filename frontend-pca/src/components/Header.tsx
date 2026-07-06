@@ -90,6 +90,16 @@ const Header = () => {
         </Link>
       )}
 
+      {isAdmin && (
+        <Link
+          href="/empresas"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-white border border-white/30 hover:bg-white/20 hover:border-white/60 transition-all duration-200"
+        >
+          <i className="pi pi-briefcase text-sm"></i>
+          <span>EMPRESAS</span>
+        </Link>
+      )}
+
       <span className="text-white opacity-40 mx-1">|</span>
 
       <button
@@ -114,7 +124,7 @@ const Header = () => {
 
   return (
     <div style={headerStyle} className="shadow-md w-full" suppressHydrationWarning>
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <Toolbar
           start={startContent}
           end={endContent}
