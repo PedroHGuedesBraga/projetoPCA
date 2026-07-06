@@ -4,13 +4,11 @@ const app = require("../index");
 const {
   sequelize,
   connectDB,
-  syncDatabase,
   createInitialAdmin,
 } = require("../db");
 
 const {
   Empresa,
-  contratoEmpresa,
 } = require("../src/models/associations");
 
 describe("Testes - Contrato Empresa (/api/contratoEmpresa)", () => {

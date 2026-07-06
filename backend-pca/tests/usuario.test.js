@@ -34,7 +34,6 @@ describe('Testes de Integração - CRUD /api/usuario', () => {
 
   // ... Seus blocos it() de CRUD continuam aqui embaixo
   // --- 1. TESTE DO CREATE ---
-  helperContextText: 'Cadastrando um novo usuário na rota POST'
   it('POST /api/usuario - Deve criar um novo usuário com sucesso', async () => {
     const response = await request(app)
       .post('/api/usuario')

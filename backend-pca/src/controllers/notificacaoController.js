@@ -1,5 +1,5 @@
 const { Notificacao } = require("../models/associations");
-const { Op } = require("sequelize");
+
 
 const notificacaoController = {
   listar: async (req, res) => {

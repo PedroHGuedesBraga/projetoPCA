@@ -1,5 +1,4 @@
 const { Usuario, Secretaria } = require("../models/associations");
-const { sequelize } = require("../../db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 

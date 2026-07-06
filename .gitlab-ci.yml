@@ -1,6 +1,26 @@
 stages:
+  - lint
   - test
   - build
+
+# Configuração global de cache para não baixar a internet a cada job
+cache:
+  key:
+    files:
+      - backend-pca/package-lock.json
+  paths:
+    - backend-pca/.npm/
+  policy: pull-push
+
+lint_backend:
+  stage: lint
+  image: node:22
+  before_script:
+    - cd backend-pca
+    # O --cache .npm faz o npm usar a pasta que salvamos no cache do GitLab
+    - npm ci --cache .npm --prefer-offline
+  script:
+    - npm run lint
 
 test_backend:
   stage: test
@@ -22,24 +42,23 @@ test_backend:
     DB_USER: postgres
     DB_PASSWORD: postgres
     DB_NAME: pca_test
-
     PORT: "3000"
-
     NODE_ENV: test
-
     JWT_USER_SECRET: teste-user
     JWT_ADMIN_SECRET: teste-admin
-
     FRONTEND_URL: http://localhost:3000
-
     ADMIN_PASSWORD: admin123
     ADMIN_CPF: "11111111111"
+
+  # Só começa a rodar o banco e os testes se o Lint passar
+  needs:
+    - lint_backend
 
   before_script:
     - apt-get update && apt-get install -y postgresql-client
     - until pg_isready -h postgres -U postgres; do sleep 2; done
     - cd backend-pca
-    - npm ci
+    - npm ci --cache .npm --prefer-offline
 
   script:
     - npm test
