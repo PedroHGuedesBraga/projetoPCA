@@ -3,7 +3,7 @@ const path = require("path");
 const fs = require("fs");
 
 // Cria a pasta na raiz do projeto para ficar mais organizado
-const pastaUploads = path.resolve(__dirname, "../../uploads/pdfs");
+const pastaUploads = path.resolve(__dirname, "../../uploads");
 
 if (!fs.existsSync(pastaUploads)) {
     fs.mkdirSync(pastaUploads, { recursive: true });
