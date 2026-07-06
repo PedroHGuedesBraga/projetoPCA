@@ -45,7 +45,46 @@ async function createInitialAdmin() {
     console.log("✅ Admin inicial criado");
   }
 }
+async function createInitialSecretarias() {
+  const Secretaria = require("./src/models/Secretaria");
 
+  const secretarias = [
+    "Gabinete do Prefeito",
+    "Secretaria de Administração",
+    "Secretaria de Finanças",
+    "Secretaria de Planejamento",
+    "Secretaria de Educação",
+    "Secretaria de Saúde",
+    "Secretaria de Assistência Social",
+    "Secretaria de Obras",
+    "Secretaria de Infraestrutura",
+    "Secretaria de Transportes",
+    "Secretaria de Agricultura",
+    "Secretaria de Meio Ambiente",
+    "Secretaria de Cultura",
+    "Secretaria de Esporte e Lazer",
+    "Secretaria de Turismo",
+    "Secretaria de Desenvolvimento Econômico",
+    "Secretaria de Segurança Pública",
+    "Secretaria de Habitação",
+    "Secretaria de Comunicação",
+    "Controladoria Geral",
+    "Procuradoria Geral do Município",
+  ];
+
+  for (const nome of secretarias) {
+    const existe = await Secretaria.findOne({
+      where: { nome },
+    });
+
+    if (!existe) {
+      await Secretaria.create({ nome });
+      console.log(`✅ Secretaria "${nome}" criada.`);
+    }
+  }
+
+  console.log("✅ Secretarias iniciais verificadas.");
+}
 async function syncDatabase() {
   try {
     await sequelize.sync({ alter: true });
@@ -77,4 +116,5 @@ module.exports = {
   connectDB,
   syncDatabase,
   createInitialAdmin,
+  createInitialSecretarias
 };
