@@ -20,7 +20,7 @@ describe('Testes de Integração - CRUD /api/usuario', () => {
     const loginResponse = await request(app)
       .post('/api/admin/login') // Lembra de checar se a rota tem ou não o /api baseado nas suas rotas de Admin
       .send({
-        cpf: process.env.ADMIN_CPF, // CPF do Super Admin padrão
+        cpf: process.env.ADMIN_CPF, 
         senha: process.env.ADMIN_PASSWORD
       });
 
@@ -57,20 +57,35 @@ describe('Testes de Integração - CRUD /api/usuario', () => {
     userIdCriado = response.body.usuario.id;
   });
 
-  it('POST /api/usuario - Deve rejeitar email já cadastrado', async () => {
+  it('POST /api/usuario - Deve rejeitar conta já cadastrado', async () => {
     const response = await request(app)
       .post('/api/usuario')
       .set('Authorization', `Bearer ${adminToken}`)
       .send({
         nome: 'Outro Nome',
         email: 'joao.silva@sistema.com', // Mesmo email do teste anterior
-        cpf: '98765432100',
+        cpf: process.env.ADMIN_CPF, // Mesmo CPF do teste anterior
         senha: 'outraSenha123',
         cargo: 'gerente'
       });
 
     expect(response.statusCode).toBe(400);
-    expect(response.body.message).toBe('Email já cadastrado');
+    expect(response.body.message).toBe('Conta já cadastrado');
+  });
+  it('POST /api/usuario - Deve rejeitar cpf já cadastrado', async () => {
+    const response = await request(app)
+      .post('/api/usuario')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        nome: 'Outro Nome',
+        email: 'joao.silva@sistema.com', // Mesmo email do teste anterior
+        cpf: '12345678901', // Mesmo CPF do teste anterior
+        senha: 'outraSenha123',
+        cargo: 'gerente'
+      });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.message).toBe('Conta já cadastrado');
   });
 
   // --- 2. TESTES DO READ ---

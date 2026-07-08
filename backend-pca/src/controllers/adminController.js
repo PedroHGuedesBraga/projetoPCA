@@ -8,9 +8,9 @@ const adminController = {
     try {
       const { nome, email, cpf, senha } = req.body;
 
-      const existingAdmin = await Admin.findOne({ where: { email } });
+      const existingAdmin = await Admin.findOne({ where: { cpf } });
       if (existingAdmin)
-        return res.status(400).json({ message: "Email já cadastrado" });
+        return res.status(400).json({ message: "Conta já cadastrado" });
 
       const hashedPassword = await bcrypt.hash(senha, 10);
 
