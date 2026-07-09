@@ -1,18 +1,23 @@
-const { Usuario, Secretaria } = require("../models/associations");
-const { sequelize } = require("../../db");
+const { Usuario, Secretaria, Admin } = require("../models/associations");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+
 
 const usuarioController = {
     // CREATE - criar usuário
     create: async (req, res) => {
         try {
             const { nome, email, cpf, senha, cargo, secretariaId } = req.body;
-
+            const existingAdmin = await Admin.findOne({ where: { cpf } });
+            if(existingAdmin){
+                return res.status(400).json({ message: "Conta já cadastrado" });
+            }
             // checar se já existe usuário com o mesmo email
-            const existingUser = await Usuario.findOne({ where: { email } });
-            if (existingUser)
-                return res.status(400).json({ message: "Email já cadastrado" });
+            const existingUser = await Usuario.findOne({ where: { cpf } });
+            if (existingUser){
+                return res.status(400).json({ message: "Conta já cadastrado" });
+            }
+                
 
             const hashedPassword = await bcrypt.hash(senha, 10);
 
@@ -124,7 +129,7 @@ const usuarioController = {
             const token = jwt.sign(
                 { id: usuario.id, cpf: usuario.cpf, cargo: usuario.cargo },
                 process.env.JWT_USER_SECRET,
-                { expiresIn: "1d" }
+                { expiresIn: "30m" }
             );
             const usuarioResponse = usuario.toJSON();
             delete usuarioResponse.senha;

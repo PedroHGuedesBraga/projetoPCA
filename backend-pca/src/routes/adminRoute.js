@@ -93,7 +93,7 @@ router.post("/",authAdmin, adminController.create);
  *           application/json:
  *             example:
  *               message: "Login bem-sucedido"
- *               token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *               token: "<jwt-token>"
  *       401:
  *         description: Credenciais inválidas
  *       404:

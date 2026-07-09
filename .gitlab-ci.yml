@@ -1,6 +1,66 @@
 stages:
+  - lint
+  - security
   - test
   - build
+  - readyToProd
+
+# Configuração global de cache para não baixar a internet a cada job
+cache:
+  key:
+    files:
+      - backend-pca/package-lock.json
+  paths:
+    - backend-pca/.npm/
+  policy: pull-push
+
+lint_backend:
+  stage: lint
+  image: node:22
+  before_script:
+    - cd backend-pca
+    # O --cache .npm faz o npm usar a pasta que salvamos no cache do GitLab
+    - npm ci --cache .npm --prefer-offline
+  script:
+    - npm run lint
+
+security_audit:
+  stage: security
+  image: node:22
+
+  needs:
+    - lint_backend
+
+  before_script:
+    - cd backend-pca
+    - npm ci --cache .npm --prefer-offline
+
+  script:
+    - npm audit --audit-level=high
+
+secret_scan:
+  stage: security
+  image:
+    name: zricethezav/gitleaks:latest
+    entrypoint: [""]
+
+  needs:
+    - lint_backend
+
+  script:
+    - gitleaks detect --source . --config .gitleaks.toml --verbose
+    
+sast_scan:
+  stage: security
+  image:
+    name: returntocorp/semgrep:latest
+    entrypoint: [""]
+
+  needs:
+    - lint_backend
+
+  script:
+    - semgrep scan --config=auto backend-pca
 
 test_backend:
   stage: test
@@ -22,24 +82,26 @@ test_backend:
     DB_USER: postgres
     DB_PASSWORD: postgres
     DB_NAME: pca_test
-
     PORT: "3000"
-
     NODE_ENV: test
-
     JWT_USER_SECRET: teste-user
     JWT_ADMIN_SECRET: teste-admin
-
     FRONTEND_URL: http://localhost:3000
-
     ADMIN_PASSWORD: admin123
     ADMIN_CPF: "11111111111"
+
+  # Só começa a rodar o banco e os testes se o Lint passar
+  needs:
+    - lint_backend
+    - security_audit
+    - secret_scan
+    - sast_scan
 
   before_script:
     - apt-get update && apt-get install -y postgresql-client
     - until pg_isready -h postgres -U postgres; do sleep 2; done
     - cd backend-pca
-    - npm ci
+    - npm ci --cache .npm --prefer-offline
 
   script:
     - npm test
@@ -75,3 +137,82 @@ build_frontend:
 
   script:
     - docker build -t frontend-pca ./frontend-pca
+
+ready_to_prod:
+  stage: readyToProd
+  image: docker:latest
+
+  services:
+    - docker:dind
+
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+  # PostgreSQL
+    POSTGRES_DB: pca_test
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+
+    # Backend
+    DB_HOST: banco
+    DB_PORT: "5432"
+    DB_USER: postgres
+    DB_PASSWORD: postgres
+    DB_NAME: pca_test
+    PORT: "3000"
+    NODE_ENV: test
+    JWT_USER_SECRET: teste-user
+    JWT_ADMIN_SECRET: teste-admin
+    FRONTEND_URL: http://localhost:3000
+    ADMIN_PASSWORD: admin123
+    ADMIN_CPF: "11111111111"
+
+  needs:
+    - build_backend
+    - build_frontend
+
+  before_script:
+    - apk add --no-cache docker-cli-compose
+  script:
+    - |
+      cat > .env <<EOF
+      POSTGRES_DB=$POSTGRES_DB
+      POSTGRES_USER=$POSTGRES_USER
+      POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+      EOF
+
+    - |
+      cat > backend-pca/.env <<EOF
+      DB_HOST=$DB_HOST
+      DB_PORT=$DB_PORT
+      DB_USER=$DB_USER
+      DB_PASSWORD=$DB_PASSWORD
+      DB_NAME=$DB_NAME
+      PORT=$PORT
+      NODE_ENV=$NODE_ENV
+      JWT_USER_SECRET=$JWT_USER_SECRET
+      JWT_ADMIN_SECRET=$JWT_ADMIN_SECRET
+      FRONTEND_URL=$FRONTEND_URL
+      ADMIN_PASSWORD=$ADMIN_PASSWORD
+      ADMIN_CPF=$ADMIN_CPF
+      EOF
+    - |
+      cat > frontend-pca/.env.local <<EOF
+      NEXT_PUBLIC_API_URL=http://localhost:3000
+      EOF
+    - docker compose up -d --build
+
+    # Espera os containers iniciarem
+    - sleep 30
+
+    # Mostra os containers
+    - docker compose ps
+
+    # Se algum container morreu, o job falha
+    - test "$(docker inspect -f '{{.State.Running}}' backend-pca)" = "true"
+    - test "$(docker inspect -f '{{.State.Running}}' frontend-pca)" = "true"
+    - test "$(docker inspect -f '{{.State.Running}}' banco-pca)" = "true"
+    - test "$(docker inspect -f '{{.State.Running}}' nginx-pca)" = "true"
+
+  after_script:
+    - docker compose logs
+    - docker compose down -v

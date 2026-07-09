@@ -1,0 +1,7 @@
+[allowlist]
+description = "Swagger examples"
+
+paths = [
+  "backend-pca/src/routes/adminRoute.js",
+  "backend-pca/src/routes/usuarioRoute.js"
+]

@@ -19,6 +19,7 @@ const authAdmin = (req, res, next) => {
         
         next();
     } catch (error) {
+        console.error(error);
         res.status(401).json({ msg: 'Token inválido ou expirado' });
     }
 };

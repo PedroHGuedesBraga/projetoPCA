@@ -21,8 +21,8 @@ describe('Testes de Integração - CRUD /admin', () => {
     // Remove todos os admins exceto o super admin inicial
     await Admin.destroy({
       where: {
-        email: {
-          [require('sequelize').Op.ne]: process.env.ADMIN_EMAIL
+        cpf: {
+          [require('sequelize').Op.ne]: process.env.ADMIN_CPF
         }
       }
     });
@@ -69,19 +69,19 @@ describe('Testes de Integração - CRUD /admin', () => {
     adminIdCriado = response.body.admin.id;
   });
 
-  it('POST /api/api/admin - Não deve permitir email duplicado', async () => {
+  it('POST /api/api/admin - Não deve permitir cpf duplicado', async () => {
     const response = await request(app)
       .post('/api/admin')
       .set('Authorization', `Bearer ${adminToken}`)
       .send({
         nome: 'Outro Admin',
         email: 'admin.teste@sistema.com',
-        cpf: '88888888888',
+        cpf: '99999999999',
         senha: 'OutraSenha123'
       });
 
     expect(response.statusCode).toBe(400);
-    expect(response.body.message).toBe('Email já cadastrado');
+    expect(response.body.message).toBe('Conta já cadastrado');
   });
 
   // ============================

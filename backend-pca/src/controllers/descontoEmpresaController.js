@@ -1,6 +1,4 @@
 const { descontoEmpresa } = require("../models/associations");
-const { sequelize } = require("../../db");
-
 const descontoEmpresaController = {
     create: async (req, res) => {
         const {

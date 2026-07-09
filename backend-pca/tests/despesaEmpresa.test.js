@@ -4,21 +4,19 @@ const app = require("../index");
 const {
   sequelize,
   connectDB,
-  syncDatabase,
   createInitialAdmin,
 } = require("../db");
 
 const {
   Empresa,
   contratoEmpresa,
-  descontoEmpresa,
 } = require("../src/models/associations");
 
 describe("Testes - Desconto Empresa (/api/descontoEmpresa)", () => {
   let adminToken;
   let empresaId;
   let contratoId;
-  let descontoId;
+
 
   // =====================
   // BEFORE ALL (RESET LIMPO)
@@ -90,7 +88,7 @@ describe("Testes - Desconto Empresa (/api/descontoEmpresa)", () => {
     expect(parseFloat(response.body.valorDesconto)).toBe(150.5);
     expect(response.body.dataEnvio).toContain("2026-01-10");
 
-    descontoId = response.body.id;
+
   });
 
   // =====================

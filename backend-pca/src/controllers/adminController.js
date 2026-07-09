@@ -1,5 +1,4 @@
 const { Admin } = require("../models/associations");
-const { sequelize } = require("../../db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
@@ -9,9 +8,9 @@ const adminController = {
     try {
       const { nome, email, cpf, senha } = req.body;
 
-      const existingAdmin = await Admin.findOne({ where: { email } });
+      const existingAdmin = await Admin.findOne({ where: { cpf } });
       if (existingAdmin)
-        return res.status(400).json({ message: "Email já cadastrado" });
+        return res.status(400).json({ message: "Conta já cadastrado" });
 
       const hashedPassword = await bcrypt.hash(senha, 10);
 
@@ -114,7 +113,7 @@ const adminController = {
     const token = jwt.sign(
       { id: admin.id, email: admin.email, cargo: admin.cargo },
       process.env.JWT_ADMIN_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: "30m" }
     );
 
     // Extrair apenas os campos seguros

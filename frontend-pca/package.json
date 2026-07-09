@@ -21,8 +21,7 @@
     "primereact": "^10.9.7",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "react-transition-group": "^4.4.5",
-    "xlsx": "^0.18.5"
+    "react-transition-group": "^4.4.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
