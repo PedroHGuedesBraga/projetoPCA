@@ -1,20 +1,19 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { DataTable } from "primereact/datatable";
-import { Column } from "primereact/column";
-import { Button } from "primereact/button";
-import { Dialog } from "primereact/dialog";
-import { InputText } from "primereact/inputtext";
 import { Toast } from "primereact/toast";
 import { ProgressSpinner } from "primereact/progressspinner";
-import { Calendar } from "primereact/calendar";
 import { useRouteGuard } from "@/hooks/useRouteGuard";
 import aprovadoService, { Aprovado } from "@/services/aprovado/aprovadoService";
+import AdminHeader from "@/components/adminPage/AdminHeader";
+import AprovadosTable from "@/components/adminPage/AprovadosTable";
+import DetalheAprovadoModal from "@/components/adminPage/DetalheAprovadoModal";
+import EnviarDocumentoModal from "@/components/adminPage/EnviarDocumentoModal";
 
 export default function AdminPage() {
   const guardStatus = useRouteGuard("admin");
   const toastRef = useRef<Toast>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [aprovados, setAprovados] = useState<Aprovado[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,8 +21,6 @@ export default function AdminPage() {
   const [nomeEmpresa, setNomeEmpresa] = useState("");
   const [dataContrato, setDataContrato] = useState<Date | null>(null);
   const [arquivo, setArquivo] = useState<File | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   const [detalheOpen, setDetalheOpen] = useState(false);
   const [detalheAprovado, setDetalheAprovado] = useState<Aprovado | null>(null);
   const [loadingDetalhe, setLoadingDetalhe] = useState(false);
@@ -43,9 +40,7 @@ export default function AdminPage() {
     }
   };
 
-  useEffect(() => {
-    fetchAprovados();
-  }, []);
+  useEffect(() => { fetchAprovados(); }, []);
 
   const resetForm = () => {
     setNomeEmpresa("");
@@ -60,8 +55,7 @@ export default function AdminPage() {
       return;
     }
     try {
-      const dataStr = dataContrato.toISOString().split("T")[0];
-      await aprovadoService.upload(nomeEmpresa, dataStr, arquivo);
+      await aprovadoService.upload(nomeEmpresa, dataContrato.toISOString().split("T")[0], arquivo);
       showToast("success", "Documento enviado", `${nomeEmpresa} foi cadastrado.`);
       setModalOpen(false);
       resetForm();
@@ -93,28 +87,8 @@ export default function AdminPage() {
     }
   };
 
-  const dataContratoTemplate = (a: Aprovado) =>
-    a.dataContrato ? new Date(a.dataContrato).toLocaleDateString("pt-BR") : "-";
-
-  const dataEnvioTemplate = (a: Aprovado) =>
-    a.createdAt ? new Date(a.createdAt).toLocaleDateString("pt-BR") : "-";
-
-  const acoesTemplate = (a: Aprovado) => (
-    <Button
-      label="Visualizar"
-      icon="pi pi-eye"
-      severity="info"
-      className="p-button-sm p-button-text"
-      onClick={() => handleVisualizar(a)}
-    />
-  );
-
   if (guardStatus === "loading")
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <ProgressSpinner />
-      </div>
-    );
+    return <div className="flex justify-center items-center min-h-screen"><ProgressSpinner /></div>;
 
   if (guardStatus === "denied")
     return (
@@ -129,8 +103,7 @@ export default function AdminPage() {
           onClick={() => window.history.back()}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-blue-800 text-blue-800 font-semibold text-sm bg-white shadow-sm hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer"
         >
-          <i className="pi pi-arrow-left" />
-          Voltar
+          <i className="pi pi-arrow-left" /> Voltar
         </button>
       </div>
     );
@@ -138,130 +111,27 @@ export default function AdminPage() {
   return (
     <div className="p-5 max-w-6xl mx-auto">
       <Toast ref={toastRef} position="top-right" />
-
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-900">Documentos Aprovados</h1>
-          <p className="text-500 mt-1">Documentos PDF de contratos aprovados</p>
-        </div>
-        <button
-          onClick={() => setModalOpen(true)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-semibold shadow-sm hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer"
-          style={{ backgroundColor: "#16a34a" }}
-        >
-          <i className="pi pi-upload text-xs" />
-          Enviar Documento
-        </button>
-      </div>
-
-      {loading ? (
-        <div className="flex justify-center py-8">
-          <ProgressSpinner />
-        </div>
-      ) : (
-        <DataTable
-          value={aprovados}
-          dataKey="id"
-          paginator
-          rows={10}
-          emptyMessage="Nenhum documento enviado."
-          className="shadow-2"
-          size="small"
-        >
-          <Column field="nomeEmpresa" header="Empresa" sortable />
-          <Column header="Data do Contrato" body={dataContratoTemplate} sortable sortField="dataContrato" />
-          <Column header="Data de Envio" body={dataEnvioTemplate} sortable sortField="createdAt" />
-          <Column header="Ações" body={acoesTemplate} style={{ width: "110px" }} />
-        </DataTable>
-      )}
-
-      <Dialog
-        header="Detalhes do Contrato"
+      <AdminHeader onUploadClick={() => setModalOpen(true)} />
+      <AprovadosTable aprovados={aprovados} loading={loading} onVisualizar={handleVisualizar} />
+      <DetalheAprovadoModal
         visible={detalheOpen}
-        style={{ width: "38vw" }}
-        modal
         onHide={() => { setDetalheOpen(false); setDetalheAprovado(null); }}
-      >
-        {loadingDetalhe ? (
-          <div className="flex justify-center py-6">
-            <ProgressSpinner />
-          </div>
-        ) : detalheAprovado && (
-          <div className="flex flex-col gap-4 p-3">
-            <div className="flex flex-col gap-1">
-              <span className="text-xs text-gray-500 font-semibold uppercase">Empresa</span>
-              <span className="text-lg font-bold text-gray-800">{detalheAprovado.nomeEmpresa}</span>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-xs text-gray-500 font-semibold uppercase">Data do Contrato</span>
-              <span className="text-gray-700">
-                {detalheAprovado.dataContrato
-                  ? new Date(detalheAprovado.dataContrato).toLocaleDateString("pt-BR")
-                  : "—"}
-              </span>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-xs text-gray-500 font-semibold uppercase">Data de Envio</span>
-              <span className="text-gray-700">
-                {detalheAprovado.createdAt
-                  ? new Date(detalheAprovado.createdAt).toLocaleDateString("pt-BR")
-                  : "—"}
-              </span>
-            </div>
-            <Button
-              label="Baixar Documento"
-              icon="pi pi-download"
-              severity="info"
-              className="mt-2"
-              onClick={() => handleDownload(detalheAprovado)}
-            />
-          </div>
-        )}
-      </Dialog>
-
-      <Dialog
-        header="Enviar Documento Aprovado"
+        aprovado={detalheAprovado}
+        loading={loadingDetalhe}
+        onDownload={handleDownload}
+      />
+      <EnviarDocumentoModal
         visible={modalOpen}
-        style={{ width: "38vw" }}
-        modal
         onHide={() => { setModalOpen(false); resetForm(); }}
-      >
-        <div className="flex flex-col gap-3 p-3">
-          <label>Nome da Empresa</label>
-          <InputText
-            value={nomeEmpresa}
-            onChange={(e) => setNomeEmpresa(e.target.value)}
-            placeholder="Ex: Construtora ABC Ltda"
-            className="w-full"
-          />
-
-          <label>Data do Contrato</label>
-          <Calendar
-            value={dataContrato}
-            onChange={(e) => setDataContrato(e.value as Date)}
-            dateFormat="dd/mm/yy"
-            placeholder="Selecione a data"
-            className="w-full"
-            showIcon
-          />
-
-          <label>Arquivo PDF</label>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,application/pdf"
-            onChange={(e) => setArquivo(e.target.files?.[0] ?? null)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 cursor-pointer file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700 file:font-semibold"
-          />
-          {arquivo && (
-            <p className="text-xs text-green-600 flex items-center gap-1">
-              <i className="pi pi-check-circle" /> {arquivo.name}
-            </p>
-          )}
-
-          <Button label="Enviar" icon="pi pi-upload" className="p-button-success mt-3" onClick={handleUpload} />
-        </div>
-      </Dialog>
+        nomeEmpresa={nomeEmpresa}
+        onNomeEmpresaChange={setNomeEmpresa}
+        dataContrato={dataContrato}
+        onDataContratoChange={setDataContrato}
+        arquivo={arquivo}
+        onArquivoChange={setArquivo}
+        fileInputRef={fileInputRef}
+        onEnviar={handleUpload}
+      />
     </div>
   );
 }
